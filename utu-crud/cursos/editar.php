@@ -1,124 +1,131 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<style>
-    body {
-        font-family: Arial, sans-serif;
-        background-color: #f4f4f4;
-        margin: 40px;
-    }
-
-    h1, h2 {
-        color: #333;
-    }
-
-    a {
-        text-decoration: none;
-        color: #0066cc;
-        margin-right: 10px;
-    }
-
-    a:hover {
-        text-decoration: underline;
-    }
-
-    table {
-        border-collapse: collapse;
-        width: 80%;
-        background: #fff;
-    }
-
-    th, td {
-        border: 1px solid #ccc;
-        padding: 8px;
-        text-align: left;
-    }
-
-    th {
-        background-color: #eaeaea;
-    }
-
-    form {
-        background: #fff;
-        padding: 20px;
-        width: 400px;
-        border: 1px solid #ccc;
-    }
-
-    input, textarea, select {
-        width: 100%;
-        padding: 6px;
-        margin-top: 4px;
-        margin-bottom: 10px;
-    }
-
-    button {
-        padding: 8px 15px;
-        background-color: #0066cc;
-        color: white;
-        border: none;
-        cursor: pointer;
-    }
-
-    button:hover {
-        background-color: #004c99;
-    }
-</style>
-
-<body>
-    <?php
+<?php
 include("../db.php");
 $con = conectar();
 
 $id = $_GET['id'];
 
-// Curso actual
-$curso = $con->query("SELECT * FROM cursos WHERE id=$id")->fetch_assoc();
+// Traer curso actual
+$curso = $con->query("SELECT * FROM cursos WHERE id = $id")->fetch_assoc();
 
-// Niveles
+// Traer niveles
 $niveles = $con->query("SELECT * FROM niveles");
 
-if ($_POST) {
-    $sql = "UPDATE cursos SET
-        nombre='{$_POST['nombre']}',
-        descripcion='{$_POST['descripcion']}',
-        horas={$_POST['horas']},
-        fechaInicio='{$_POST['fechaInicio']}',
-        nivelId={$_POST['nivelId']}
-        descripcion={$_POST['descripcion']}
-        WHERE id=$id";
+$mensaje = "";
 
-    $con->query($sql);
-    header("Location: listar.php");
+if ($_POST) {
+    // Validación básica
+    if (
+        empty($_POST['nombre']) ||
+        empty($_POST['descripcion']) ||
+        empty($_POST['horas']) ||
+        empty($_POST['fechaInicio']) ||
+        empty($_POST['nivelId'])
+    ) {
+        $mensaje = " Todos los campos son obligatorios";
+    } else {
+        $sql = "UPDATE cursos SET
+            nombre = '{$_POST['nombre']}',
+            descripcion = '{$_POST['descripcion']}',
+            horas = {$_POST['horas']},
+            fechaInicio = '{$_POST['fechaInicio']}',
+            nivelId = {$_POST['nivelId']}
+            WHERE id = $id";
+
+        $con->query($sql);
+        header("Location: listar.php");
+        exit;
+    }
 }
 ?>
 
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Curso</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 40px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        form {
+            background: #fff;
+            padding: 20px;
+            width: 400px;
+            border: 1px solid #ccc;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 6px;
+            margin-bottom: 10px;
+        }
+
+        button {
+            padding: 8px 15px;
+            background-color: #0066cc;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #004c99;
+        }
+
+        .error {
+            color: red;
+            margin-bottom: 10px;
+        }
+
+        a {
+            display: inline-block;
+            margin-bottom: 15px;
+            color: #0066cc;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+
+<a href="listar.php">⬅ Volver a cursos</a>
+
+<h1>Editar Curso</h1>
+
+<?php if ($mensaje != "") { ?>
+    <div class="error"><?= $mensaje ?></div>
+<?php } ?>
+
 <form method="POST">
-    Nombre:<br>
-    <input type="text" name="nombre" value="<?= $curso['nombre'] ?>" required><br><br>
+    Nombre:
+    <input type="text" name="nombre" value="<?= $curso['nombre'] ?>" required>
 
-    Descripción:<br>
-    <textarea name="descripcion"><?= $curso['descripcion'] ?></textarea><br><br>
+    Descripción:
+    <textarea name="descripcion" required><?= $curso['descripcion'] ?></textarea>
 
-    Horas:<br>
-    <input type="number" name="horas" value="<?= $curso['horas'] ?>" required><br><br>
+    Horas:
+    <input type="number" name="horas" value="<?= $curso['horas'] ?>" required>
 
-    Fecha de inicio:<br>
-    <input type="date" name="fechaInicio" value="<?= $curso['fechaInicio'] ?>" required><br><br>
+    Fecha de inicio:
+    <input type="date" name="fechaInicio" value="<?= $curso['fechaInicio'] ?>" required>
 
-    Nivel:<br>
-    <select name="nivelId">
+    Nivel:
+    <select name="nivelId" required>
         <?php while ($n = $niveles->fetch_assoc()) { ?>
             <option value="<?= $n['id'] ?>"
                 <?= $n['id'] == $curso['nivelId'] ? 'selected' : '' ?>>
                 <?= $n['nombre'] ?> (<?= $n['nivel'] ?>)
             </option>
         <?php } ?>
-    </select><br><br>
+    </select>
 
     <button>Actualizar</button>
 </form>
